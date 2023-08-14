@@ -23,9 +23,24 @@ def load_user_data_to_inter():
 
         # work with the data using pandas DataFrame
         df = pd.DataFrame(result, columns=["user_id", "name", "email","address"])
-        return df
-
         
+        #Remove dublicates
+        df = df.drop_duplicates()
+
+        # Remove rows with missing values
+        df = df.dropna()
+
+        # Validate and clean email addresses
+        df = df[df['email'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$')]
+
+        # Remove leading/trailing whitespaces from text columns
+        df['name'] = df['name'].str.strip()
+        df['address'] = df['address'].str.strip()
+
+
+        #return df
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        df.to_sql("int_users", con, index=False, if_exists='append')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -53,7 +68,22 @@ def load_product_data_to_inter():
 
         # work with the data using pandas DataFrame
         df = pd.DataFrame(result, columns=["product_id", "product_name", "product_description","price"])
-        return df
+
+        # Data cleaning and transformation
+        # Remove duplicate rows
+        df = df.drop_duplicates()
+
+        # Remove rows with missing values
+        df = df.dropna()
+
+        # Clean product descriptions (remove special characters, HTML tags, etc.)
+        df['product_description'] = df['product_description'].str.replace('[^\w\s]', '').str.strip()
+
+        # Convert price to numeric format
+        df['price'] = pd.to_numeric(df['price'], errors='coerce')
+
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        df.to_sql("int_products", con, index=False, if_exists='append')
 
 
     except Exception as error:

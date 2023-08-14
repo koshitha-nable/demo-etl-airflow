@@ -18,24 +18,52 @@ with DAG(
     catchup=False
 ) as dag:
     
-    task_load_stg_user = PythonOperator(
-             task_id="load_stg_user",
+    with TaskGroup("create_table") as create_int_table_group:
+    
+        task_create_int_user = PostgresOperator(
+                task_id="create_users_int",  
+                postgres_conn_id='mock_remote_db',
+                sql='sql/create_users_int.sql'
+            )
+        
+        task_create_int_product = PostgresOperator(
+                task_id="create_products_int",  
+                postgres_conn_id='mock_remote_db',
+                sql='sql/create_products_int.sql'
+            )
+        
+        task_create_int_transaction = PostgresOperator(
+                task_id="create_transaction_int",  
+                postgres_conn_id='mock_remote_db',
+                sql='sql/create_transactions_int.sql'
+            )
+        
+        task_create_int_reviews = PostgresOperator(
+                task_id="create_review_int",  
+                postgres_conn_id='mock_remote_db',
+                sql='sql/create_review_int.sql'
+            )
+    
+    task_load_int_user = PythonOperator(
+             task_id="load_int_user",
             python_callable=load_user_data_to_inter
         )
     
-    task_load_stg_product = PythonOperator(
-             task_id="load_stg_product",
+    task_load_int_product = PythonOperator(
+             task_id="load_int_product",
             python_callable=load_product_data_to_inter
         )
     
-    task_load_stg_transaction = PythonOperator(
-             task_id="load_stg_transaction",
+    task_load_int_transaction = PythonOperator(
+             task_id="load_int_transaction",
             python_callable=load_transaction_data_to_inter
         )
     
-    task_load_stg_review = PythonOperator(
-             task_id="load_stg_review",
+    task_load_int_review = PythonOperator(
+             task_id="load_int_review",
             python_callable=load_review_data_to_inter
         )
     
-task_load_stg_user >> task_load_stg_product >> task_load_stg_transaction >> task_load_stg_review
+
+    
+create_int_table_group>>  task_load_int_transaction >> task_load_int_review >> task_create_int_user >> task_load_int_user
