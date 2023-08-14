@@ -112,7 +112,18 @@ def load_transaction_data_to_inter():
 
         # work with the data using pandas DataFrame
         df = pd.DataFrame(result, columns=["purchase_id", "product_id", "user_id","quantity"])
-        return df
+        # Data cleaning
+        # Remove duplicate rows
+        df = df.drop_duplicates()
+
+        # Remove rows with missing values
+        df = df.dropna()
+
+        # Convert quantity to integer
+        df['quantity'] = df['quantity'].astype(int)
+
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        df.to_sql("int_transactions", con, index=False, if_exists='append')
 
 
     except Exception as error:
@@ -141,7 +152,18 @@ def load_review_data_to_inter():
 
         # work with the data using pandas DataFrame
         df = pd.DataFrame(result, columns=["review_id", "product_id", "review_score","review_date"])
-        return df
+                # Data cleaning
+        # Remove duplicate rows
+        df = df.drop_duplicates()
+
+        # Convert review_score to integer
+        df['review_score'] = df['review_score'].astype(int)
+
+        # Convert review_date to datetime
+        df['review_date'] = pd.to_datetime(df['review_date'], format='%Y-%m-%d')
+
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        df.to_sql("int_reviews", con, index=False, if_exists='append')
 
 
     except Exception as error:

@@ -45,25 +45,25 @@ with DAG(
             )
     
     task_load_int_user = PythonOperator(
-             task_id="load_int_user",
+            task_id="load_int_user",
             python_callable=load_user_data_to_inter
         )
     
     task_load_int_product = PythonOperator(
-             task_id="load_int_product",
+            task_id="load_int_product",
             python_callable=load_product_data_to_inter
         )
     
     task_load_int_transaction = PythonOperator(
-             task_id="load_int_transaction",
+            task_id="load_int_transaction",
             python_callable=load_transaction_data_to_inter
         )
     
     task_load_int_review = PythonOperator(
-             task_id="load_int_review",
+            task_id="load_int_review",
             python_callable=load_review_data_to_inter
         )
     
 
     
-create_int_table_group>>  task_load_int_transaction >> task_load_int_review >> task_create_int_user >> task_load_int_user
+create_int_table_group>>  task_load_int_transaction >> task_load_int_review  >> task_load_int_user
