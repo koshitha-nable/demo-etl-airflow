@@ -108,10 +108,10 @@ with DAG(
     
     with TaskGroup("load_src_api_to_db") as load_src_api_data_group:
         
-        # task_load_src_user = PythonOperator(
-        #     task_id="load_user_to_stg",
-        #     python_callable=load_user_data_to_db
-        # )
+        task_load_src_user = PythonOperator(
+            task_id="load_user_to_stg",
+            python_callable=load_user_data_to_db
+        )
 
         task_load_src_product = PythonOperator(
             task_id="load_product_to_stg",
