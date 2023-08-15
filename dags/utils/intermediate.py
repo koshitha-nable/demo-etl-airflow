@@ -42,7 +42,7 @@ def load_user_data_to_inter():
         # Clean and transform the 'address' column
         df['address'] = df['address'].str.replace('\n', ' ')  # Remove newline characters
         address_parts = df['address'].str.extract(r'(.+),\s+([A-Za-z\s]+)\s+(\d+)')  # Extract city, state, and ZIP code
-        df['city'] = address_parts[0]
+        df['location'] = address_parts[0]
         df['state'] = address_parts[1]
         df['zip_code'] = address_parts[2]
         df.drop(['address'], axis=1, inplace=True)
@@ -53,8 +53,8 @@ def load_user_data_to_inter():
 
 
         #return df
-        # con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        # df.to_sql("int_users", con, index=False, if_exists='append')
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        df.to_sql("int_users", con, index=False, if_exists='append')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)

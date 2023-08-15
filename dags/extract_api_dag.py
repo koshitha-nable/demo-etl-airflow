@@ -24,35 +24,37 @@ with DAG(
         endpoint='users'
     )
 
-    task_get_users = SimpleHttpOperator(
-        task_id='get_users',
-        http_conn_id='mock-data-server-connection',
-        endpoint='users',
-        method='GET',
-        do_xcom_push=True,
-        response_filter=lambda response: json.loads(response.text),
-        log_response=True
+    with TaskGroup("check_api_endpoints") as check_api_endpoints_group:
 
-    )
+        task_get_users = SimpleHttpOperator(
+            task_id='get_users',
+            http_conn_id='mock-data-server-connection',
+            endpoint='users',
+            method='GET',
+            do_xcom_push=True,
+            response_filter=lambda response: json.loads(response.text),
+            log_response=True
 
-    task_get_transactions = SimpleHttpOperator(
-        task_id='get_transactions',
-        http_conn_id='mock-data-server-connection',
-        endpoint='products',
-        method='GET',
-        response_filter=lambda response: json.loads(response.text),
-        log_response=True
-    )
+        )
 
-    task_get_products = SimpleHttpOperator(
-        task_id='get_products',
-        http_conn_id='mock-data-server-connection',
-        endpoint='products',
-        method='GET',
-        response_filter=lambda response: json.loads(response.text),
-        log_response=True
+        task_get_transactions = SimpleHttpOperator(
+            task_id='get_transactions',
+            http_conn_id='mock-data-server-connection',
+            endpoint='products',
+            method='GET',
+            response_filter=lambda response: json.loads(response.text),
+            log_response=True
+        )
 
-    )
+        task_get_products = SimpleHttpOperator(
+            task_id='get_products',
+            http_conn_id='mock-data-server-connection',
+            endpoint='products',
+            method='GET',
+            response_filter=lambda response: json.loads(response.text),
+            log_response=True
+
+        )
 
     with TaskGroup("create_staging_tables") as create_stg_tables_group:
         extract_users_task = PostgresOperator(
@@ -82,18 +84,19 @@ with DAG(
         
         show_data_task = BashOperator(
                 task_id='show_user_data_task',
-                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_users\') }}"',  # Modify the command as needed
+                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_users\') }}"', 
             )
         
         show_data_task = BashOperator(
                 task_id='show_product_data_task',
-                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_products\') }}"',  # Modify the command as needed
+                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_products\') }}"', 
             )
         
         show_data_task = BashOperator(
                 task_id='show_transaction_data_task',
-                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_transactions\') }}"',  # Modify the command as needed
+                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'get_transactions\') }}"', 
             )
+        
     task_check_csv = PythonOperator(
 
         task_id="check_csv",
@@ -103,7 +106,7 @@ with DAG(
 
     task_show_csv_data = BashOperator(
                 task_id='show_src_reviews_data',
-                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'check_csv\') }}"',  # Modify the command as needed
+                bash_command='echo "{{ task_instance.xcom_pull(task_ids=\'check_csv\') }}"',  
             )
     
     with TaskGroup("load_src_api_to_db") as load_src_api_data_group:
@@ -128,4 +131,4 @@ with DAG(
             python_callable=load_review_to_db
         )
        
-task_is_api_active >> [ task_get_users , task_get_products,task_get_transactions] >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group
+task_is_api_active >>check_api_endpoints_group >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group
