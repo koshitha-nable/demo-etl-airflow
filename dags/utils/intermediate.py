@@ -96,6 +96,9 @@ def load_product_data_to_inter():
         # Convert price to numeric format
         df['price'] = pd.to_numeric(df['price'], errors='coerce')
 
+        # Add a new column for discounted price
+        df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
+
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='append')
 
