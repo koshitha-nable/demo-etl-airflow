@@ -66,4 +66,4 @@ with DAG(
     
 
     
-create_int_table_group>>  task_load_int_transaction >> task_load_int_review  >> task_load_int_user
+create_int_table_group>>  task_load_int_transaction >> task_load_int_review  >> task_load_int_user >> task_load_int_product

@@ -1,10 +1,12 @@
 import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
-import requests
+import requests,os
 from airflow.models import Variable
 from sqlalchemy import create_engine
 from sqlalchemy.sql.type_api import Variant
+
+file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def load_user_data_to_inter():
     try:
@@ -35,12 +37,24 @@ def load_user_data_to_inter():
 
         # Remove leading/trailing whitespaces from text columns
         df['name'] = df['name'].str.strip()
-        df['address'] = df['address'].str.strip()
+        #df['address'] = df['address'].str.strip()
+
+        # Clean and transform the 'address' column
+        df['address'] = df['address'].str.replace('\n', ' ')  # Remove newline characters
+        address_parts = df['address'].str.extract(r'(.+),\s+([A-Za-z\s]+)\s+(\d+)')  # Extract city, state, and ZIP code
+        df['city'] = address_parts[0]
+        df['state'] = address_parts[1]
+        df['zip_code'] = address_parts[2]
+        df.drop(['address'], axis=1, inplace=True)
+        print(df)
+        print(df.shape[1])
+        print(df.columns)
+
 
 
         #return df
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        df.to_sql("int_users", con, index=False, if_exists='append')
+        # con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        # df.to_sql("int_users", con, index=False, if_exists='append')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
