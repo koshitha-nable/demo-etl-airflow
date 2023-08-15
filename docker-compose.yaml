@@ -175,8 +175,7 @@ services:
       - "5050:5050"
 
   mdb:
-    image: mysql:5.7
-    restart: always
+    image: mysql:8.0
     environment:
       MYSQL_DATABASE: 'db'
       # So you don't have to use root, but you can if you like
