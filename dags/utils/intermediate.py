@@ -140,7 +140,16 @@ def load_transaction_data_to_inter():
         df['quantity'] = df['quantity'].astype(int)
 
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        df.to_sql("int_transactions", con, index=False, if_exists='append')
+        product_prices = pd.read_sql_table("int_products", con)  # Load product prices from the transformed products table
+        df = df.merge(product_prices, on="product_id", how="left")
+        df["total_amount"] = df["price"] * df["quantity"]
+        df.drop(['product_name'], axis=1, inplace=True)
+        df.drop(['product_description'], axis=1, inplace=True)
+        df.drop(['discounted_price'], axis=1, inplace=True)
+        df.drop(['price'], axis=1, inplace=True)
+        print(df.columns)
+        
+       # df.to_sql("int_transactions", con, index=False, if_exists='append')
 
 
     except Exception as error:
@@ -179,8 +188,15 @@ def load_review_data_to_inter():
         # Convert review_date to datetime
         df['review_date'] = pd.to_datetime(df['review_date'], format='%Y-%m-%d')
 
+        # Data transformation
+        # Calculate the year and month of the review_date
+        df['review_year'] = df['review_date'].dt.year
+        df['review_month'] = df['review_date'].dt.month
+
+
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        df.to_sql("int_reviews", con, index=False, if_exists='append')
+        print(df.columns)
+        #df.to_sql("int_reviews", con, index=False, if_exists='append')
 
 
     except Exception as error:
