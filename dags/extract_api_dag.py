@@ -6,16 +6,19 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator
 from airflow.operators.postgres_operator import PostgresOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.utils.trigger_rule import TriggerRule
 from airflow.utils.dates import days_ago
 from airflow.operators.bash_operator import BashOperator
 from sql import *
-from utils.etl_utils import *
+from utils.staging import *
+from utils.common import *
 
 with DAG(
     dag_id='api_dag',
     schedule_interval='@daily',
     start_date= days_ago(1),
-    catchup=False
+    catchup=False,
+    on_failure_callback=handle_failure  # Specify the failure handling function
 ) as dag:
     
     task_is_api_active = HttpSensor(
@@ -130,5 +133,12 @@ with DAG(
              task_id="load_review_to_stg",
             python_callable=load_review_to_db
         )
+    
+    final_status = PythonOperator(
+        task_id='final_status',
+        provide_context=True,
+        python_callable=final_status,
+        trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
+    )
        
-task_is_api_active >>check_api_endpoints_group >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group
+task_is_api_active >>check_api_endpoints_group >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group>>final_status

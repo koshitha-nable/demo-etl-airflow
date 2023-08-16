@@ -8,14 +8,22 @@ from airflow.operators.postgres_operator import PostgresOperator
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import days_ago
 from airflow.operators.bash_operator import BashOperator
+from airflow.models.base import Base
+from airflow.utils.trigger_rule import TriggerRule
 from sql import *
 from utils.intermediate import *
+from utils.common import *
+
+
+
 
 with DAG(
     dag_id='int_dag',
     schedule_interval='@daily',
     start_date= days_ago(1),
-    catchup=False
+    catchup=False,
+    on_failure_callback=handle_failure
+    
 ) as dag:
     
     with TaskGroup("create_table") as create_int_table_group:
@@ -64,6 +72,14 @@ with DAG(
             python_callable=load_review_data_to_inter
         )
     
+    final_status = PythonOperator(
+        task_id='final_status',
+        provide_context=True,
+        python_callable=final_status,
+        trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
+       
+)
+    
 
     
-create_int_table_group>>  task_load_int_transaction >> task_load_int_review  >> task_load_int_user >> task_load_int_product
+create_int_table_group>>  task_load_int_transaction >> task_load_int_review  >> task_load_int_user >> task_load_int_product >> final_status

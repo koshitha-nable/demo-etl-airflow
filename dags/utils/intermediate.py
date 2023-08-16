@@ -46,15 +46,15 @@ def load_user_data_to_inter():
         df['state'] = address_parts[1]
         df['zip_code'] = address_parts[2]
         df.drop(['address'], axis=1, inplace=True)
-        print(df)
-        print(df.shape[1])
-        print(df.columns)
+        #print(df)
+        #print(df.shape[1])
+        #print(df.columns)
 
 
 
         #return df
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        df.to_sql("int_users", con, index=False, if_exists='append')
+        df.to_sql("int_users", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -100,7 +100,7 @@ def load_product_data_to_inter():
         df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
 
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        df.to_sql("int_products", con, index=False, if_exists='append')
+        df.to_sql("int_products", con, index=False, if_exists='replace')
 
 
     except Exception as error:
@@ -147,9 +147,9 @@ def load_transaction_data_to_inter():
         df.drop(['product_description'], axis=1, inplace=True)
         df.drop(['discounted_price'], axis=1, inplace=True)
         df.drop(['price'], axis=1, inplace=True)
-        print(df.columns)
+        #print(df.columns)
         
-       # df.to_sql("int_transactions", con, index=False, if_exists='append')
+        df.to_sql("int_transactions", con, index=False, if_exists='append')
 
 
     except Exception as error:
@@ -178,7 +178,7 @@ def load_review_data_to_inter():
 
         # work with the data using pandas DataFrame
         df = pd.DataFrame(result, columns=["review_id", "product_id", "review_score","review_date"])
-                # Data cleaning
+        # Data cleaning
         # Remove duplicate rows
         df = df.drop_duplicates()
 
@@ -195,8 +195,8 @@ def load_review_data_to_inter():
 
 
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        print(df.columns)
-        #df.to_sql("int_reviews", con, index=False, if_exists='append')
+        #print(df.columns)
+        df.to_sql("int_reviews", con, index=False, if_exists='append')
 
 
     except Exception as error:
