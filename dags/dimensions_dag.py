@@ -27,25 +27,25 @@ with DAG(
     with TaskGroup("create_table") as create_dim_table_group:
     
         task_create_int_user = PostgresOperator(
-                task_id="create_users_int",  
+                task_id="create_users_dim",  
                 postgres_conn_id='mock_remote_db',
                 sql='sql/create_users_dim.sql'
             )
         
         task_create_int_product = PostgresOperator(
-                task_id="create_products_int",  
+                task_id="create_products_dim",  
                 postgres_conn_id='mock_remote_db',
                 sql='sql/create_products_dim.sql'
             )
         
         task_create_int_transaction = PostgresOperator(
-                task_id="create_transaction_int",  
+                task_id="create_transaction_fact",  
                 postgres_conn_id='mock_remote_db',
                 sql='sql/create_transactions_fact.sql'
             )
         
         task_create_int_reviews = PostgresOperator(
-                task_id="create_review_int",  
+                task_id="create_review_dim",  
                 postgres_conn_id='mock_remote_db',
                 sql='sql/create_review_dim.sql')
         
