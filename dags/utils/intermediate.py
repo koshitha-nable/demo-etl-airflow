@@ -5,18 +5,15 @@ import requests,os
 from airflow.models import Variable
 from sqlalchemy import create_engine
 from sqlalchemy.sql.type_api import Variant
+from utils.common import *
 
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
 
 def load_user_data_to_inter():
     try:
 
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
+        connection = create_postgres_connection()
         
         cursor = connection.cursor()
         query = "SELECT * FROM stg_users;"
@@ -46,34 +43,23 @@ def load_user_data_to_inter():
         df['state'] = address_parts[1]
         df['zip_code'] = address_parts[2]
         df.drop(['address'], axis=1, inplace=True)
-        #print(df)
-        #print(df.shape[1])
-        #print(df.columns)
-
-
 
         #return df
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_users", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+        close_postgres_connection(connection)
+
 
 def load_product_data_to_inter():
     try:
 
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
+        connection = create_postgres_connection()
         
         cursor = connection.cursor()
         query = "SELECT * FROM stg_products;"
@@ -99,28 +85,22 @@ def load_product_data_to_inter():
         # Add a new column for discounted price
         df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
 
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        #con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='replace')
-
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+        close_postgres_connection(connection)
+
 
 def load_transaction_data_to_inter():
     try:
 
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
+        connection = create_postgres_connection()
         
         cursor = connection.cursor()
         query = "SELECT * FROM stg_transactions;"
@@ -139,37 +119,30 @@ def load_transaction_data_to_inter():
         # Convert quantity to integer
         df['quantity'] = df['quantity'].astype(int)
 
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        product_prices = pd.read_sql_table("int_products", con)  # Load product prices from the transformed products table
+        product_prices = pd.read_sql_table("int_products",con)  # Load product prices from the transformed products table
         df = df.merge(product_prices, on="product_id", how="left")
         df["total_amount"] = df["price"] * df["quantity"]
         df.drop(['product_name'], axis=1, inplace=True)
         df.drop(['product_description'], axis=1, inplace=True)
         df.drop(['discounted_price'], axis=1, inplace=True)
         df.drop(['price'], axis=1, inplace=True)
-        #print(df.columns)
+        print(df)
         
-        df.to_sql("int_transactions", con, index=False, if_exists='append')
-
+        df.to_sql("int_transactions", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+        close_postgres_connection(connection)
+
 
 def load_review_data_to_inter():
+    
     try:
-
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
+        connection = create_postgres_connection()
         
         cursor = connection.cursor()
         query = "SELECT * FROM stg_reviews;"
@@ -193,8 +166,6 @@ def load_review_data_to_inter():
         df['review_year'] = df['review_date'].dt.year
         df['review_month'] = df['review_date'].dt.month
 
-
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         #print(df.columns)
         df.to_sql("int_reviews", con, index=False, if_exists='append')
 
@@ -203,8 +174,6 @@ def load_review_data_to_inter():
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
-
+        close_postgres_connection(connection)

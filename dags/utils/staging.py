@@ -5,112 +5,77 @@ import requests,os
 from airflow.models import Variable
 from sqlalchemy import create_engine
 from sqlalchemy.sql.type_api import Variant
+from utils.common import *
 
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
 
 def load_user_data_to_db():
     try:
-        user_data = pull_user_data()
 
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
-        
+        connection = create_postgres_connection()
         cursor = connection.cursor()
-        
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        
-        user_data.to_sql("stg_users", con, index=False, if_exists='append')
+        user_data = pull_user_data()
+        user_data.to_sql("stg_users", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+        close_postgres_connection(connection)
+
 
 def load_product_data_to_db():
     try:
-        product_data = pull_product_data()
-
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
         
+        connection = create_postgres_connection()
         cursor = connection.cursor()
-        
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        
-        product_data.to_sql("stg_products", con, index=False, if_exists='append')
+        product_data = pull_product_data()
+        product_data.to_sql("stg_products", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+        close_postgres_connection(connection)
+
 
 def load_transaction_data_to_db():
     try:
-        transaction_data = pull_transaction_data()
-
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
         
+        connection = create_postgres_connection()
         cursor = connection.cursor()
-        
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        
-        transaction_data.to_sql("stg_transactions", con, index=False, if_exists='append')
+        transaction_data = pull_transaction_data()
+        transaction_data.to_sql("stg_transactions", con, index=False, if_exists='replace')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed") 
+        close_postgres_connection(connection)
 
 def load_review_to_db():
     try:
-        review_data = get_reviews()
-
-        connection = psycopg2.connect(
-            user=Variable.get("POSTGRES_USER"),
-            password=Variable.get("POSTGRES_PASSWORD"),
-            host="remote_db",
-            database=Variable.get("DB_NAME")
-        )
         
+        connection =create_postgres_connection()
         cursor = connection.cursor()
-        
-        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-        
+        review_data = get_reviews()
         review_data.to_sql("stg_reviews", con, index=False, if_exists='append')
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
 
     finally:
-        if connection:
+        if cursor:
             cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed") 
+        close_postgres_connection(connection)
+
 
 
 def get_reviews():

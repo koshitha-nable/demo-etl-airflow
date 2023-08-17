@@ -9,6 +9,7 @@ from airflow.utils.task_group import TaskGroup
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.utils.dates import days_ago
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from sql import *
 from utils.staging import *
 from utils.common import *
@@ -134,6 +135,16 @@ with DAG(
             python_callable=load_review_to_db
         )
     
+    trigger_intermediate_dag = TriggerDagRunOperator(
+        task_id='trigger_intermediate_dag',
+        trigger_dag_id="int_dag"
+    )
+
+    trigger_dimension_dag = TriggerDagRunOperator(
+        task_id='trigger_idim_dag',
+        trigger_dag_id="dim_dag"
+    )
+    
     final_status = PythonOperator(
         task_id='final_status',
         provide_context=True,
@@ -141,4 +152,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
     )
        
-task_is_api_active >>check_api_endpoints_group >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group>>final_status
+task_is_api_active >>check_api_endpoints_group >> create_stg_tables_group >> check_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review>> load_src_api_data_group>>trigger_intermediate_dag >> trigger_dimension_dag >> final_status 
