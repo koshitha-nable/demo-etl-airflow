@@ -14,6 +14,7 @@ from sql import *
 from utils.staging import *
 from utils.common import *
 
+
 with DAG(
     dag_id='api_dag',
     schedule_interval='@daily',
@@ -44,7 +45,7 @@ with DAG(
         task_get_transactions = SimpleHttpOperator(
             task_id='get_transactions',
             http_conn_id='mock-data-server-connection',
-            endpoint='products',
+            endpoint='transactions',
             method='GET',
             response_filter=lambda response: json.loads(response.text),
             log_response=True

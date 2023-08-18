@@ -1,6 +1,7 @@
 from airflow.utils.state import State
 import os
 import smtplib
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import psycopg2
@@ -8,6 +9,8 @@ from sqlalchemy import create_engine
 import pandas as pd
 from airflow.models import Variable
 from sqlalchemy.sql.type_api import Variant
+
+logger = logging.getLogger(__name__)
 
 def final_status(**kwargs):
     for task_instance in kwargs['dag_run'].get_task_instances():
@@ -25,21 +28,21 @@ def handle_failure(context):
     # For example, you can send a notification, trigger a recovery process, or perform cleanup tasks.
 
     # Send a notification
-    send_notification()
+    send_notification(failed_task_id)
         
 
-def send_notification():
+def send_notification(failed_task_id):
     # Email configuration
-    sender_email = 'xxxxx.a@gmail.com'
-    recipient_email = 'xxx'
+    sender_email = 'savindukoshitha.a@gmail.com'
+    recipient_email = 'koshithaa@n-able.biz'
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
-    smtp_username = 'xxxx@gmail.com'
-    smtp_password = ''
+    smtp_username = 'savindukoshitha.a@gmail.com'
+    smtp_password = 'txaliigoscdbganf'
 
     # Email content
     subject = 'Airflow DAG Execution Failure'
-    body = 'An error occurred while executing the DAG. Please check the logs for more details.'
+    body = f"An error occurred while executing task '{failed_task_id}' in the DAG. Please check the logs for more details."
 
     # Construct the email message
     message = MIMEMultipart()
@@ -60,6 +63,7 @@ def send_notification():
 
 
 def create_postgres_connection():
+    
     try:
         connection = psycopg2.connect(
             user=Variable.get("POSTGRES_USER"),
@@ -68,6 +72,7 @@ def create_postgres_connection():
             database=Variable.get("DB_NAME")
         )
         return connection
+        
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         return None

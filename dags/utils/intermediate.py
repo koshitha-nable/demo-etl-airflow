@@ -9,6 +9,7 @@ from utils.common import *
 
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+logger = logging.getLogger(__name__)
 
 def load_user_data_to_inter():
     try:
@@ -46,9 +47,12 @@ def load_user_data_to_inter():
 
         #return df
         df.to_sql("int_users", con, index=False, if_exists='replace')
+        logger.info("Loading user data to intermediate table...")
+        
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
+        logger.error("Error while loading user data to inter table...")
 
     finally:
         if cursor:
@@ -87,9 +91,11 @@ def load_product_data_to_inter():
 
         #con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='replace')
+        logger.info("Loading product data to intermediate table...")
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
+        logger.error("Error while loading product data to inter table...")
 
     finally:
         if cursor:
@@ -129,9 +135,11 @@ def load_transaction_data_to_inter():
         print(df)
         
         df.to_sql("int_transactions", con, index=False, if_exists='replace')
+        logger.info("Loading transaction data to intermediate table...")
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
+        logger.error("Error while loading transaction data to inter table...")
 
     finally:
         if cursor:
@@ -155,6 +163,9 @@ def load_review_data_to_inter():
         # Remove duplicate rows
         df = df.drop_duplicates()
 
+        # Remove rows with missing values
+        df = df.dropna()
+
         # Convert review_score to integer
         df['review_score'] = df['review_score'].astype(int)
 
@@ -168,10 +179,12 @@ def load_review_data_to_inter():
 
         #print(df.columns)
         df.to_sql("int_reviews", con, index=False, if_exists='append')
+        logger.info("Loading review data to intermediate table...")
 
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
+        logger.error("Error while loading review data to inter table...")
 
     finally:
         if cursor:
