@@ -1,4 +1,5 @@
 import pandas as pd
+import logging
 import psycopg2
 from sqlalchemy import create_engine
 import requests,os

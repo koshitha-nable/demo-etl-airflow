@@ -1,7 +1,6 @@
 from airflow.utils.state import State
 import os
 import smtplib
-import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import psycopg2
@@ -10,7 +9,6 @@ import pandas as pd
 from airflow.models import Variable
 from sqlalchemy.sql.type_api import Variant
 
-logger = logging.getLogger(__name__)
 
 def final_status(**kwargs):
     for task_instance in kwargs['dag_run'].get_task_instances():
@@ -33,12 +31,12 @@ def handle_failure(context):
 
 def send_notification(failed_task_id):
     # Email configuration
-    sender_email = 'savindukoshitha.a@gmail.com'
+    sender_email = 'xxx.a@gmail.com'
     recipient_email = 'koshithaa@n-able.biz'
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
-    smtp_username = 'savindukoshitha.a@gmail.com'
-    smtp_password = 'txaliigoscdbganf'
+    smtp_username = 'xxx.a@gmail.com'
+    smtp_password = ''
 
     # Email content
     subject = 'Airflow DAG Execution Failure'
