@@ -9,7 +9,6 @@ import pandas as pd
 from airflow.models import Variable
 from sqlalchemy.sql.type_api import Variant
 
-
 def final_status(**kwargs):
     for task_instance in kwargs['dag_run'].get_task_instances():
         if task_instance.current_state() != State.SUCCESS and \
