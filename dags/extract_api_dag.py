@@ -157,4 +157,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
     )
        
-task_is_api_active >>check_api_endpoints_group >> [create_stg_tables_group, check_api_data_group, load_src_api_data_group] >> task_check_csv >> task_show_csv_data >> task_load_src_review >> trigger_intermediate_dag >> trigger_dimension_dag >> final_status
+task_is_api_active >>check_api_endpoints_group >> [create_stg_tables_group, check_api_data_group]  >>  load_src_api_data_group >> task_check_csv >> task_show_csv_data >> task_load_src_review >> trigger_intermediate_dag >> trigger_dimension_dag >> final_status
