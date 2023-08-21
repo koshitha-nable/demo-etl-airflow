@@ -82,5 +82,5 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
         )
     
-create_dim_table_group >> task_load_dim_users >> task_load_dim_products >> task_load_dim_reviews >> task_load_fact_trans >>validate_task >> final_status
+create_dim_table_group >> [task_load_dim_users , task_load_dim_products , task_load_dim_reviews] >> task_load_fact_trans >>validate_task >> final_status
 
