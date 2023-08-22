@@ -11,14 +11,12 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.models.base import Base
 from airflow.utils.trigger_rule import TriggerRule
 from sql import *
-from utils.intermediate import *
+from utils.dimension import *
 from utils.common import *
 
 
-
-
 with DAG(
-    dag_id='int_dag',
+    dag_id='dim_dag',
     schedule_interval='@daily',
     start_date= days_ago(1),
     catchup=False,
@@ -26,60 +24,63 @@ with DAG(
     
 ) as dag:
     
-    with TaskGroup("create_table") as create_int_table_group:
+    with TaskGroup("create_table") as create_dim_table_group:
     
         task_create_int_user = PostgresOperator(
-                task_id="create_users_int",  
+                task_id="create_users_dim",  
                 postgres_conn_id='mock_remote_db',
-                sql='sql/create_users_int.sql'
+                sql='sql/create_users_dim.sql'
             )
         
         task_create_int_product = PostgresOperator(
-                task_id="create_products_int",  
+                task_id="create_products_dim",  
                 postgres_conn_id='mock_remote_db',
-                sql='sql/create_products_int.sql'
+                sql='sql/create_products_dim.sql'
             )
         
         task_create_int_transaction = PostgresOperator(
-                task_id="create_transaction_int",  
+                task_id="create_transaction_fact",  
                 postgres_conn_id='mock_remote_db',
-                sql='sql/create_transactions_int.sql'
+                sql='sql/create_transactions_fact.sql'
             )
         
         task_create_int_reviews = PostgresOperator(
-                task_id="create_review_int",  
+                task_id="create_review_dim",  
                 postgres_conn_id='mock_remote_db',
-                sql='sql/create_review_int.sql'
-            )
-    
-    task_load_int_user = PythonOperator(
-            task_id="load_int_user",
-            python_callable=load_user_data_to_inter
+                sql='sql/create_review_dim.sql')
+        
+    task_load_fact_trans = PythonOperator(
+            task_id="load_fact_transaction",
+            python_callable=load_fact_transaction
         )
     
-    task_load_int_product = PythonOperator(
-            task_id="load_int_product",
-            python_callable=load_product_data_to_inter
+    task_load_dim_users = PythonOperator(
+            task_id="load_dim_user",
+            python_callable=load_dim_user
         )
     
-    task_load_int_transaction = PythonOperator(
-            task_id="load_int_transaction",
-            python_callable=load_transaction_data_to_inter
+    task_load_dim_products = PythonOperator(
+            task_id="load_dim_product",
+            python_callable=load_dim_product
         )
     
-    task_load_int_review = PythonOperator(
-            task_id="load_int_review",
-            python_callable=load_review_data_to_inter
+    task_load_dim_reviews = PythonOperator(
+            task_id="load_dim_review",
+            python_callable=load_dim_review
         )
     
+    validate_task = PythonOperator(
+        task_id='validate_fact_table',
+        python_callable=validate_null_values
+        )
+        
+        
     final_status = PythonOperator(
         task_id='final_status',
         provide_context=True,
         python_callable=final_status,
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
-       
-)
+        )
     
+create_dim_table_group >> [task_load_dim_users , task_load_dim_products , task_load_dim_reviews] >> task_load_fact_trans >>validate_task >> final_status
 
-    
-create_int_table_group>>  [task_load_int_transaction , task_load_int_review  , task_load_int_user , task_load_int_product] >> final_status

@@ -3,5 +3,5 @@ CREATE TABLE IF NOT EXISTS stg_users(
         name VARCHAR(200) not null,
         email VARCHAR(200) not null,
         address VARCHAR(200) not null
-        
+       
     );
