@@ -36,8 +36,21 @@ def load_fact_transaction():
     try:
 
         df = pd.read_sql_table("int_transactions",con) 
+        #cleaning data
+        df = df.dropna(subset=['purchase_id'])
+        df = df.drop_duplicates(subset=['purchase_id'])
+        #casting
+        df['purchase_id'] = df['purchase_id'].astype(int)
+        df['product_id'] = df['product_id'].astype(int)
+        df['user_id'] = df['user_id'].astype(int)
+        df['quantity'] = df['quantity'].astype(int)
+        df['total_amount'] = df['total_amount'].astype(float)
+        #Remove rows with very high quantities or amounts
+        df = df[(df['quantity'] > 0) & (df['total_amount'] > 0)]
+
         df.to_sql("fact_transaction",con, index=False, if_exists='replace')
         logger.info("Loading transaction data to fact table...")
+        
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -50,6 +63,13 @@ def load_dim_product():
         df = pd.read_sql_table("int_products",con) 
         # Drop duplicates based on 'user_id'
         df.drop_duplicates(subset=['product_id'], keep='first', inplace=True)
+        df = df.dropna(subset=['purchase_id'])
+        df['product_id'] = df['product_id'].astype(int)
+        df['price'] = df['price'].astype(float)
+        df['discounted_price'] = df['discounted_price'].astype(float)
+        df['product_description'].fillna('', inplace=True)
+        df['product_name'] = df['product_name'].str.title()
+
         df.to_sql("dim_product",con, index=False, if_exists='replace')
         logger.info("Loading product data to dim table...")
 
@@ -63,6 +83,37 @@ def load_dim_user():
 
         df = pd.read_sql_table("int_users",con) 
         df.drop_duplicates(subset=['user_id'], keep='first', inplace=True)
+        df['user_id'] = df['user_id'].astype(int)
+        df['zip_code'] = df['zip_code'].astype(int)
+        df = df.dropna(subset=['user_id', 'name', 'email'])
+        df = df[df['email'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$')]
+        state_mapping = state_dictionary = {
+            "FL": "Florida",
+            "AL": "Alabama",
+            "RI": "Rhode Island",
+            "AK": "Alaska",
+            "AL": "Alabama",
+            "NY": "New York",
+            "CT": "Connecticut",
+            "AR": "Arkansas",
+            "MS": "Mississippi",
+            "HI": "Hawaii",
+            "CA": "California",
+            "NV": "Nevada",
+            "OH": "Ohio",
+            "KS": "Kansas",
+            "ID": "Idaho",
+            "GA": "Georgia",
+            "CO": "Colorado",
+            "WY": "Wyoming",
+            "LA": "Louisiana",
+            "WI": "Wisconsin",
+            "Box":"Box",
+            "WA": "Washington",
+            "NJ": "New Jersey"
+        }
+        df['state'] = df['state'].map(state_mapping)
+
         df.to_sql("dim_user",con, index=False, if_exists='replace')
         logger.info("Loading user data to dim table...")
 
@@ -76,6 +127,11 @@ def load_dim_review():
 
         df = pd.read_sql_table("int_reviews",con) 
         df.drop_duplicates(subset=['review_id'], keep='first', inplace=True)
+        df = df.dropna(subset=['review_id'])
+        df['product_id'] = df['product_id'].astype(int)
+        df['review_score'] = df['review_score'].astype(int)
+        df['review_date'] = pd.to_datetime(df['review_date'])
+
         df.to_sql("dim_review",con, index=False, if_exists='replace')
         logger.info("Loading review data to dim table...")
 
