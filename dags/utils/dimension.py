@@ -21,7 +21,7 @@ logging.basicConfig(filename="newfile.log",
  
 logger = logging.getLogger(__name__)
 
-def validate_null_values():
+def validate_fact():
     # Load fact table data into a DataFrame
     df = pd.read_sql_table("fact_transaction",con) 
     # Check for null values in the DataFrame
@@ -30,7 +30,78 @@ def validate_null_values():
         logger.error("Error.. Null Values Found")
         raise Exception("Null values found in the fact table!")
     logger.info("Validated")
+
+def validate_dim_product():
+    try:
+        # Load dimension table data into a DataFrame
+        df = pd.read_sql_table("dim_product", con)
         
+        # Check for null values in the DataFrame
+        if df.isnull().values.any():
+            error_message = "Null values found in the dimension table!"
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        # Check for duplicate entries
+        duplicate_rows = df[df.duplicated()]
+        if not duplicate_rows.empty:
+            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        logger.info("Dimension table 'dim_product' validated successfully.")
+    
+    except Exception as e:
+        logger.error("An error occurred during validation: %s", str(e))
+
+def validate_dim_user():
+    try:
+        # Load dimension table data into a DataFrame
+        df = pd.read_sql_table("dim_user", con)
+        
+        # Check for null values in the DataFrame
+        if df.isnull().values.any():
+            error_message = "Null values found in the dimension table!"
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        # Check for duplicate entries
+        duplicate_rows = df[df.duplicated()]
+        if not duplicate_rows.empty:
+            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        logger.info("Dimension table 'dim_user' validated successfully.")
+    
+    except Exception as e:
+        logger.error("An error occurred during validation: %s", str(e))
+
+
+def validate_dim_review():
+    try:
+        # Load dimension table data into a DataFrame
+        df = pd.read_sql_table("dim_review", con)
+        
+        # Check for null values in the DataFrame
+        if df.isnull().values.any():
+            error_message = "Null values found in the dimension table!"
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        # Check for duplicate entries
+        duplicate_rows = df[df.duplicated()]
+        if not duplicate_rows.empty:
+            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            logger.error(error_message)
+            raise Exception(error_message)
+        
+        logger.info("Dimension table 'dim_review' validated successfully.")
+    
+    except Exception as e:
+        logger.error("An error occurred during validation: %s", str(e))
+
+
 
 def load_fact_transaction():
     try:
