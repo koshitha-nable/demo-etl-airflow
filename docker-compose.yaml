@@ -56,6 +56,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./samples:/opt/airflow/dags/faux_data_lake
     - ./src:/opt/airflow/dags/src_data
+    - ./tests:/opt/airflow/tests
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     - redis
