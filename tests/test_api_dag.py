@@ -77,12 +77,12 @@ class TestMyDag(unittest.TestCase):
         dim_task = etl_dag.get_task('trigger_idim_dag')
         assert dim_task.trigger_rule == TriggerRule.ALL_SUCCESS
 
-    # def test_http_task(self):
-    #     dag = self.dagbag.get_dag('api_dag')
-    #     tg = dag.task_group.get_child_by_label('check_api_endpoints')
-    #     #task = tg.get_task('get_users')
-    #     task=tg.get_task('get_users')
-    #     assert task.trigger_rule == TriggerRule.ALL_SUCCESS
+    def test_http_task(self):
+        dag = self.dagbag.get_dag('api_dag')
+        tg = dag.task_group.get_child_by_label('check_api_endpoints')
+        #task = tg.get_task('get_users')
+        task=tg.get_task('get_users')
+        assert task.trigger_rule == TriggerRule.ALL_SUCCESS
         
 
  
