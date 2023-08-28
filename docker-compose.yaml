@@ -200,6 +200,26 @@ services:
     restart: always
     environment:
       POSTGRES_PASSWORD: password
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: always
 
     
 
@@ -207,3 +227,4 @@ volumes:
   postgres-db-volume:
   postgres_data:
   my-db:
+  prometheus:
