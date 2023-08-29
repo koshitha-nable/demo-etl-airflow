@@ -57,6 +57,7 @@ x-airflow-common:
     - ./samples:/opt/airflow/dags/faux_data_lake
     - ./src:/opt/airflow/dags/src_data
     - ./tests:/opt/airflow/tests
+    - ./airflow.cfg:/opt/airflow/airflow.cfg
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     - redis
@@ -220,6 +221,30 @@ services:
     depends_on:
       - prometheus
     restart: always
+
+  prom-statsd-exporter:
+    image: prom/statsd-exporter
+    container_name: prom-statsd-exporter
+    ports:
+      - "9123:9102"
+      - "8125:8125/udp"
+    volumes:
+      - ./mapping.yml:/tmp/mapping.yml
+    command: >
+      --statsd.mapping-config=/tmp/mapping.yml
+      --statsd.listen-udp=:8125
+      --web.listen-address=:9102
+
+  # statsd-exporter:
+  #   image: prom/statsd-exporter:v0.21.0
+  #   volumes:
+  #     - ./mapping.yml:/tmp/mapping.yml
+  #   entrypoint: ["/bin/sh", "-c", "--"]
+  #   command: ["statsd_exporter --log.level debug --statsd.mapping-config=/tmp/mapping.yml"]
+  #   ports:
+  #     - 9102:9102   # scrape port
+  #     - 9125:9125   # ingest port
+  #   restart: always
 
     
 
