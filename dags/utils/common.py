@@ -4,10 +4,30 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import psycopg2
+import logging
 from sqlalchemy import create_engine
 import pandas as pd
 from airflow.models import Variable
 from sqlalchemy.sql.type_api import Variant
+
+
+# Create a custom log formatter
+log_format = "%(asctime)s [%(levelname)s] - %(message)s"
+date_format = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(log_format, datefmt=date_format)
+
+# Create a logger and set its level
+logger = logging.getLogger("custom_logger")
+logger.setLevel(logging.DEBUG)
+
+# Create a FileHandler to write logs to a file
+file_handler = logging.FileHandler("common_log.log")
+
+# Set the formatter for the file handler
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 def final_status_func(**kwargs):
     for task_instance in kwargs['dag_run'].get_task_instances():
@@ -55,8 +75,10 @@ def send_notification(failed_task_id):
             server.login(smtp_username, smtp_password)
             server.send_message(message)
         print('Email notification sent successfully!')
+        logger.info("Email notification sent successfully!")
     except Exception as e:
         print(f'Failed to send email notification. Error: {str(e)}')
+        logger.error("Failed to send email notification")
 
 
 def create_postgres_connection():
@@ -68,16 +90,23 @@ def create_postgres_connection():
             host="remote_db",
             database=Variable.get("DB_NAME")
         )
+        logger.info("Postgres connection is established")
         return connection
+        
         
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
+        logger.error("Error while connecting to PostgreSQL")
         return None
+        
+    
 
 def close_postgres_connection(connection):
     try:
         if connection:
             connection.close()
             print("PostgreSQL connection is closed")
+            logger.error("PostgreSQL connection is closed")
     except Exception as error:
         print("Error while closing PostgreSQL connection:", error)
+        logger.error("Error while closing PostgreSQL connection")
