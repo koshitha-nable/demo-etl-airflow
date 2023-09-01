@@ -58,6 +58,8 @@ x-airflow-common:
     - ./src:/opt/airflow/dags/src_data
     - ./tests:/opt/airflow/tests
     - ./airflow.cfg:/opt/airflow/airflow.cfg
+    - ./logs/custom_dag_logs:/opt/airflow/dags/custom_dag_logs
+    
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     - redis

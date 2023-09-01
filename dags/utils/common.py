@@ -10,6 +10,11 @@ import pandas as pd
 from airflow.models import Variable
 from sqlalchemy.sql.type_api import Variant
 
+import os
+
+log_directory = "/opt/airflow/logs/custom_dag_logs"
+# if not os.path.exists(log_directory):
+#     os.makedirs(log_directory,exist_ok=True)
 
 # Create a custom log formatter
 log_format = "%(asctime)s [%(levelname)s] - %(message)s"
@@ -17,11 +22,14 @@ date_format = "%Y-%m-%d %H:%M:%S"
 formatter = logging.Formatter(log_format, datefmt=date_format)
 
 # Create a logger and set its level
-logger = logging.getLogger("custom_logger")
+logger = logging.getLogger("custom_logger_cmn")
 logger.setLevel(logging.DEBUG)
 
-# Create a FileHandler to write logs to a file
-file_handler = logging.FileHandler("common_log.log")
+# Define the full path to the log file in the desired directory
+log_file_path = os.path.join(log_directory, "custom_log.log")
+
+# Create a FileHandler to write logs to the specified file path
+file_handler = logging.FileHandler(log_file_path)
 
 # Set the formatter for the file handler
 file_handler.setFormatter(formatter)
@@ -90,9 +98,8 @@ def create_postgres_connection():
             host="remote_db",
             database=Variable.get("DB_NAME")
         )
-        logger.info("Postgres connection is established")
+
         return connection
-        
         
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -106,7 +113,6 @@ def close_postgres_connection(connection):
         if connection:
             connection.close()
             print("PostgreSQL connection is closed")
-            logger.error("PostgreSQL connection is closed")
     except Exception as error:
         print("Error while closing PostgreSQL connection:", error)
         logger.error("Error while closing PostgreSQL connection")
