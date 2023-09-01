@@ -204,6 +204,7 @@ services:
   
   prometheus:
     image: prom/prometheus
+    hostname: prometheus
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
