@@ -242,6 +242,7 @@ services:
   #     --web.listen-address=:9102
   prometheus:
     image: prom/prometheus
+    hostname: prometheus
     volumes:
       - ./prometheus:/etc/prometheus
       - prometheus_data:/prometheus
