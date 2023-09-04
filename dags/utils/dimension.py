@@ -11,15 +11,30 @@ from utils.common import *
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
 
-# # Create and configure logger
-logging.basicConfig(filename="newfile.log",
-                    format='%(asctime)s %(message)s',
-                    filemode='w')
- 
-# Creating an object
-#logger = logging.getLogger()
- 
-logger = logging.getLogger(__name__)
+og_directory = "/opt/airflow/logs/custom_dag_logs"
+# if not os.path.exists(log_directory):
+#     os.makedirs(log_directory,exist_ok=True)
+
+# Create a custom log formatter
+log_format = "%(asctime)s [%(levelname)s] - %(message)s"
+date_format = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(log_format, datefmt=date_format)
+
+# Create a logger and set its level
+logger = logging.getLogger("custom_logger_dim")
+logger.setLevel(logging.DEBUG)
+
+# Define the full path to the log file in the desired directory
+log_file_path = os.path.join(log_directory, "dim_log.log")
+
+# Create a FileHandler to write logs to the specified file path
+file_handler = logging.FileHandler(log_file_path)
+
+# Set the formatter for the file handler
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 def validate_fact():
     # Load fact table data into a DataFrame
@@ -29,7 +44,7 @@ def validate_fact():
     if df.isnull().values.any():
         logger.error("Error.. Null Values Found")
         raise Exception("Null values found in the fact table!")
-    logger.info("Validated")
+    logger.info("fact table is validated")
 
 def validate_dim_product():
     try:
