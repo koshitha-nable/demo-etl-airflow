@@ -10,7 +10,31 @@ from utils.common import *
 
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
-logger = logging.getLogger(__name__)
+
+og_directory = "/opt/airflow/logs/custom_dag_logs"
+# if not os.path.exists(log_directory):
+#     os.makedirs(log_directory,exist_ok=True)
+
+# Create a custom log formatter
+log_format = "%(asctime)s [%(levelname)s] - %(message)s"
+date_format = "%Y-%m-%d %H:%M:%S"
+formatter = logging.Formatter(log_format, datefmt=date_format)
+
+# Create a logger and set its level
+logger = logging.getLogger("custom_logger_int")
+logger.setLevel(logging.DEBUG)
+
+# Define the full path to the log file in the desired directory
+log_file_path = os.path.join(log_directory, "intermediate_log.log")
+
+# Create a FileHandler to write logs to the specified file path
+file_handler = logging.FileHandler(log_file_path)
+
+# Set the formatter for the file handler
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the logger
+logger.addHandler(file_handler)
 
 def load_user_data_to_inter():
     try:
@@ -45,6 +69,7 @@ def load_user_data_to_inter():
         df['state'] = address_parts[1]
         df['zip_code'] = address_parts[2]
         df.drop(['address'], axis=1, inplace=True)
+        logger.info("Transformed user data...")
 
         #return df
         df.to_sql("int_users", con, index=False, if_exists='replace')
@@ -89,6 +114,7 @@ def load_product_data_to_inter():
 
         # Add a new column for discounted price
         df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
+        logger.info("Transformed product data...")
 
         #con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='replace')
@@ -133,7 +159,7 @@ def load_transaction_data_to_inter():
         df.drop(['product_description'], axis=1, inplace=True)
         df.drop(['discounted_price'], axis=1, inplace=True)
         df.drop(['price'], axis=1, inplace=True)
-        print(df)
+        logger.info("Transformed transaction data...")
         
         df.to_sql("int_transactions", con, index=False, if_exists='replace')
         logger.info("Loading transaction data to intermediate table...")
@@ -177,6 +203,7 @@ def load_review_data_to_inter():
         # Calculate the year and month of the review_date
         df['review_year'] = df['review_date'].dt.year
         df['review_month'] = df['review_date'].dt.month
+        logger.info("Transformed review data...")
 
         #print(df.columns)
         df.to_sql("int_reviews", con, index=False, if_exists='append')

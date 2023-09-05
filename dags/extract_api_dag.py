@@ -153,7 +153,7 @@ with DAG(
     final_status = PythonOperator(
         task_id='final_status',
         provide_context=True,
-        python_callable=final_status,
+        python_callable=final_status_func,
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
     )
        

@@ -69,18 +69,32 @@ with DAG(
             python_callable=load_dim_review
         )
     
-    validate_task = PythonOperator(
+    validate_fact_task = PythonOperator(
         task_id='validate_fact_table',
-        python_callable=validate_null_values
+        python_callable=validate_fact
         )
-        
-        
+    
+    validate_dim_product_task = PythonOperator(
+        task_id='validate_dim_product',
+        python_callable=validate_dim_product
+        )
+    
+    validate_dim_review_task = PythonOperator(
+        task_id='validate_dim_review',
+        python_callable=validate_dim_review
+        )
+    
+    validate_dim_user_task = PythonOperator(
+        task_id='validate_dim_user',
+        python_callable=validate_dim_user
+        )
+           
     final_status = PythonOperator(
         task_id='final_status',
         provide_context=True,
-        python_callable=final_status,
+        python_callable=final_status_func,
         trigger_rule=TriggerRule.ALL_DONE, # Ensures this task runs even if upstream fails
         )
     
-create_dim_table_group >> [task_load_dim_users , task_load_dim_products , task_load_dim_reviews] >> task_load_fact_trans >>validate_task >> final_status
+create_dim_table_group >> [task_load_dim_users , task_load_dim_products , task_load_dim_reviews] >> task_load_fact_trans >> [validate_dim_product_task,validate_dim_user_task,validate_dim_review_task]>>validate_fact_task >> final_status
 
