@@ -93,13 +93,14 @@ def load_transaction_data_to_db():
             cursor.close()
         close_postgres_connection(connection)
 
+
 def load_review_to_db():
     try:
         
         connection =create_postgres_connection()
         cursor = connection.cursor()
         review_data = get_reviews()
-        review_data.to_sql("stg_reviews", con, index=False, if_exists='append')
+        review_data.to_sql("stg_reviews", con, index=False, if_exists='replace')
         logger.info("Loading review data to staging table...")
 
     except Exception as error:
@@ -131,6 +132,7 @@ def pull_product_data():
     product_data = pd.DataFrame(product_data.json())
     logger.info("Retrieved product data")
     return product_data
+
 
 def pull_transaction_data(): 
     transaction_data = requests.get('http://mock-api:5000/transactions')
