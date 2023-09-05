@@ -123,7 +123,7 @@ def load_fact_transaction():
 
         df = pd.read_sql_table("int_transactions",con) 
         #cleaning data
-        df = df.dropna(subset=['purchase_id'])
+        df = df.dropna()
         df = df.drop_duplicates(subset=['purchase_id'])
         #casting
         df['purchase_id'] = df['purchase_id'].astype(int)
@@ -149,7 +149,7 @@ def load_dim_product():
         df = pd.read_sql_table("int_products",con) 
         # Drop duplicates based on 'user_id'
         df.drop_duplicates(subset=['product_id'], keep='first', inplace=True)
-        df = df.dropna(subset=['purchase_id'])
+        df = df.dropna(subset=['product_id'])
         df['product_id'] = df['product_id'].astype(int)
         df['price'] = df['price'].astype(float)
         df['discounted_price'] = df['discounted_price'].astype(float)

@@ -1,17 +1,23 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from intermediate import (
+import sys,os
+
+# Add the parent directory of your project to the Python path
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.insert(0, project_path)
+
+from dags.utils.intermediate import (
     load_user_data_to_inter,
     load_product_data_to_inter,
     load_transaction_data_to_inter,
     load_review_data_to_inter,
 )
 
-class TestYourCode(unittest.TestCase):
+class TestIntCode(unittest.TestCase):
 
-    @patch('intermediate.create_postgres_connection')
-    @patch('intermediate.close_postgres_connection')
-    @patch('intermediate.pd.DataFrame.to_sql')
+    @patch('dags.utils.intermediate.create_postgres_connection')
+    @patch('dags.utils.intermediate.close_postgres_connection')
+    @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
     def test_load_user_data_to_inter(self, mock_to_sql, mock_close_connection, mock_create_connection):
         # Mock the database connection and data retrieval
         mock_connection = MagicMock()
@@ -29,9 +35,9 @@ class TestYourCode(unittest.TestCase):
         mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
 
-    @patch('intermediate.create_postgres_connection')
-    @patch('intermediate.close_postgres_connection')
-    @patch('intermediate.pd.DataFrame.to_sql')
+    @patch('dags.utils.intermediate.create_postgres_connection')
+    @patch('dags.utils.intermediate.close_postgres_connection')
+    @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
     def test_load_product_data_to_inter(self, mock_to_sql, mock_close_connection, mock_create_connection):
         # Mock the database connection and data retrieval
         mock_connection = MagicMock()
@@ -49,9 +55,9 @@ class TestYourCode(unittest.TestCase):
         mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
 
-    @patch('intermediate.create_postgres_connection')
-    @patch('intermediate.close_postgres_connection')
-    @patch('intermediate.pd.DataFrame.to_sql')
+    @patch('dags.utils.intermediate.create_postgres_connection')
+    @patch('dags.utils.intermediate.close_postgres_connection')
+    @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
     def test_load_transaction_data_to_inter(self, mock_to_sql, mock_close_connection, mock_create_connection):
         # Mock the database connection and data retrieval
         mock_connection = MagicMock()
@@ -69,9 +75,9 @@ class TestYourCode(unittest.TestCase):
         mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
 
-    @patch('intermediate.create_postgres_connection')
-    @patch('intermediate.close_postgres_connection')
-    @patch('intermediate.pd.DataFrame.to_sql')
+    @patch('dags.utils.intermediate.create_postgres_connection')
+    @patch('dags.utils.intermediate.close_postgres_connection')
+    @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
     def test_load_review_data_to_inter(self, mock_to_sql, mock_close_connection, mock_create_connection):
         # Mock the database connection and data retrieval
         mock_connection = MagicMock()
@@ -89,10 +95,10 @@ class TestYourCode(unittest.TestCase):
         mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
 
-    @patch('intermediate.create_postgres_connection')
-    @patch('intermediate.close_postgres_connection')
-    @patch('intermediate.pd.DataFrame.to_sql')
-    @patch('intermediate.logger')
+    @patch('dags.utils.intermediate.create_postgres_connection')
+    @patch('dags.utils.intermediate.close_postgres_connection')
+    @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
+    @patch('dags.utils.intermediate.logger')
     def test_data_cleaning(self, mock_logger, mock_to_sql, mock_close_connection, mock_create_connection):
         # Mock database connection and cursor
         mock_connection = MagicMock()
@@ -114,7 +120,6 @@ class TestYourCode(unittest.TestCase):
 
         # Assertions
         mock_logger.info.assert_called_with("Loading user data to intermediate table...")
-
 
         # Verify that the data has been cleaned as expected
         mock_cursor.execute.assert_called_once_with("SELECT * FROM stg_users;")
