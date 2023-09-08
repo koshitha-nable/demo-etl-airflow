@@ -1,7 +1,14 @@
 import unittest
 from unittest.mock import patch
 import pandas as pd
-from staging import (
+
+import sys,os
+
+# Add the parent directory of your project to the Python path
+project_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+sys.path.insert(0, project_path)
+
+from dags.utils.staging import (
     load_user_data_to_db,
     load_product_data_to_db,
     load_transaction_data_to_db,
@@ -13,11 +20,11 @@ from staging import (
 )
 
 
-class TestYourCode(unittest.TestCase):
+class TestStgCode(unittest.TestCase):
 
-    @patch('staging.create_postgres_connection')
-    @patch('staging.pull_transaction_data')
-    @patch('staging.close_postgres_connection')
+    @patch('dags.utils.staging.create_postgres_connection')
+    @patch('dags.utils.staging.pull_transaction_data')
+    @patch('dags.utils.staging.close_postgres_connection')
     def test_load_transaction_data_to_db(self, mock_create_connection, mock_pull_transaction_data, mock_close_connection):
         # Mock the database connection and data retrieval
         mock_connection = mock_create_connection.return_value
@@ -34,9 +41,9 @@ class TestYourCode(unittest.TestCase):
         mock_close_connection.assert_called_once()
 
 
-    @patch('staging.create_postgres_connection')
-    @patch('staging.pull_product_data')
-    @patch('staging.close_postgres_connection')
+    @patch('dags.utils.staging.create_postgres_connection')
+    @patch('dags.utils.staging.pull_product_data')
+    @patch('dags.utils.staging.close_postgres_connection')
     def test_load_product_data_to_db(self, mock_create_connection, mock_pull_product_data, mock_close_connection):
         # Mock the database connection and data retrieval
         mock_connection = mock_create_connection.return_value
@@ -53,9 +60,9 @@ class TestYourCode(unittest.TestCase):
         mock_close_connection.assert_called_once()
     
 
-    @patch('staging.create_postgres_connection')
-    @patch('staging.get_reviews')
-    @patch('staging.close_postgres_connection')
+    @patch('dags.utils.staging.create_postgres_connection')
+    @patch('dags.utils.staging.get_reviews')
+    @patch('dags.utils.staging.close_postgres_connection')
     def test_load_review_to_db(self, mock_create_connection, mock_get_reviews, mock_close_connection):
         # Mock the database connection and data retrieval
         mock_connection = mock_create_connection.return_value
@@ -73,7 +80,7 @@ class TestYourCode(unittest.TestCase):
     
     def test_pull_user_data_failure(self):
         # Mock a scenario where pulling user data fails
-        with patch('staging.requests.get') as mock_get:
+        with patch('dags.utils.staging.requests.get') as mock_get:
             mock_get.side_effect = Exception("Data retrieval error")
             with self.assertRaises(Exception):
                 pull_user_data()
@@ -81,7 +88,7 @@ class TestYourCode(unittest.TestCase):
 
     def test_pull_product_data_failure(self):
         # Mock a scenario where pulling product data fails
-        with patch('staging.requests.get') as mock_get:
+        with patch('dags.utils.staging.requests.get') as mock_get:
             mock_get.side_effect = Exception("Data retrieval error")
             with self.assertRaises(Exception):
                 pull_product_data()
@@ -89,10 +96,10 @@ class TestYourCode(unittest.TestCase):
     
     def test_pull_transaction_data_failure(self):
         # Mock a scenario where pulling product data fails
-        with patch('staging.requests.get') as mock_get:
+        with patch('dags.utils.staging.requests.get') as mock_get:
             mock_get.side_effect = Exception("Data retrieval error")
             with self.assertRaises(Exception):
-                pull_transaction_data
+                pull_transaction_data()
 
     def test_get_reviews(self):
         # Ensure that the function returns a DataFrame
@@ -100,9 +107,9 @@ class TestYourCode(unittest.TestCase):
         self.assertIsInstance(review_data, pd.DataFrame)
 
 
-    @patch('staging.create_postgres_connection')
-    @patch('staging.pull_user_data')
-    @patch('staging.close_postgres_connection')
+    @patch('dags.utils.staging.create_postgres_connection')
+    @patch('dags.utils.staging.pull_user_data')
+    @patch('dags.utils.staging.close_postgres_connection')
     def test_load_user_data_to_db(self, mock_create_connection, mock_pull_user_data, mock_close_connection):
         # Mock the database connection and data retrieval
         mock_create_connection.return_value.cursor.return_value.execute.return_value = None

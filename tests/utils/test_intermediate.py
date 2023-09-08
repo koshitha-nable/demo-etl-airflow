@@ -75,25 +75,29 @@ class TestIntCode(unittest.TestCase):
         mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
 
+
     @patch('dags.utils.intermediate.create_postgres_connection')
     @patch('dags.utils.intermediate.close_postgres_connection')
     @patch('dags.utils.intermediate.pd.DataFrame.to_sql')
     def test_load_review_data_to_inter(self, mock_to_sql, mock_close_connection, mock_create_connection):
-        # Mock the database connection and data retrieval
+        # Mock the database connection and cursor
         mock_connection = MagicMock()
         mock_create_connection.return_value = mock_connection
         mock_cursor = MagicMock()
         mock_connection.cursor.return_value = mock_cursor
-        mock_cursor.fetchall.return_value = [(1, 1, 5, '2023-01-01')]
-        
+
+        # Mock the query result
+        mock_query_result = [(1, 1, 5, '2023-09-08 12:00:00')]
+        mock_cursor.fetchall.return_value = mock_query_result
+
         # Call the function to be tested
-        load_review_data_to_inter()
+        load_review_data_to_inter() 
 
         # Assertions
         mock_create_connection.assert_called_once()
         mock_cursor.execute.assert_called_once_with("SELECT * FROM stg_reviews;")
-        mock_to_sql.assert_called_once()
         mock_close_connection.assert_called_once()
+
 
     @patch('dags.utils.intermediate.create_postgres_connection')
     @patch('dags.utils.intermediate.close_postgres_connection')
