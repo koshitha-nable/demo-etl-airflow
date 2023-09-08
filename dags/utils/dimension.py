@@ -53,14 +53,14 @@ def validate_dim_product():
         
         # Check for null values in the DataFrame
         if df.isnull().values.any():
-            error_message = "Null values found in the dimension table!"
+            error_message = "Null values found in the product dimension table!"
             logger.error(error_message)
             raise Exception(error_message)
         
         # Check for duplicate entries
         duplicate_rows = df[df.duplicated()]
         if not duplicate_rows.empty:
-            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            error_message = "Duplicate entries found in the product dimension table:\n{}".format(duplicate_rows)
             logger.error(error_message)
             raise Exception(error_message)
         
@@ -76,14 +76,14 @@ def validate_dim_user():
         
         # Check for null values in the DataFrame
         if df.isnull().values.any():
-            error_message = "Null values found in the dimension table!"
+            error_message = "Null values found in the user dimension table!"
             logger.error(error_message)
             raise Exception(error_message)
         
         # Check for duplicate entries
         duplicate_rows = df[df.duplicated()]
         if not duplicate_rows.empty:
-            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            error_message = "Duplicate entries found in the user dimension table:\n{}".format(duplicate_rows)
             logger.error(error_message)
             raise Exception(error_message)
         
@@ -100,14 +100,14 @@ def validate_dim_review():
         
         # Check for null values in the DataFrame
         if df.isnull().values.any():
-            error_message = "Null values found in the dimension table!"
+            error_message = "Null values found in the review dimension table!"
             logger.error(error_message)
             raise Exception(error_message)
         
         # Check for duplicate entries
         duplicate_rows = df[df.duplicated()]
         if not duplicate_rows.empty:
-            error_message = "Duplicate entries found in the dimension table:\n{}".format(duplicate_rows)
+            error_message = "Duplicate entries found in the review dimension table:\n{}".format(duplicate_rows)
             logger.error(error_message)
             raise Exception(error_message)
         
@@ -169,11 +169,12 @@ def load_dim_user():
 
         df = pd.read_sql_table("int_users",con) 
         df.drop_duplicates(subset=['user_id'], keep='first', inplace=True)
+        df = df.dropna()
         df['user_id'] = df['user_id'].astype(int)
-        df['zip_code'] = df['zip_code'].astype(int)
+        df['zip_code'] = df['zip_code']
         df = df.dropna(subset=['user_id', 'name', 'email'])
         df = df[df['email'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$')]
-        state_mapping = state_dictionary = {
+        state_mapping = {
             "FL": "Florida",
             "AL": "Alabama",
             "RI": "Rhode Island",
@@ -194,9 +195,34 @@ def load_dim_user():
             "WY": "Wyoming",
             "LA": "Louisiana",
             "WI": "Wisconsin",
-            "Box":"Box",
+            "Box": "Box",
             "WA": "Washington",
-            "NJ": "New Jersey"
+            "NJ": "New Jersey",
+            "NC": "North Carolina",
+            "MD": "Maryland",
+            "CA": "California",
+            "DE": "Delaware",
+            "KY": "Kentucky",
+            "TN": "Tennessee",
+            "AR": "Arkansas",
+            "NM": "New Mexico",
+            "AR": "Arkansas",
+            "KY": "Kentucky",
+            "IL": "Illinois",
+            "OK": "Oklahoma",
+            "AZ": "Arizona",
+            "CA": "California",
+            "SD": "South Dakota",
+            "NV": "Nevada",
+            "AK": "Alaska",
+            "HI": "Hawaii",
+            "NY": "New York",
+            "VA": "Virginia",
+            "AZ": "Arizona",
+            "AZ": "Arizona",
+            "VT": "Vermont",
+            "HI": "Hawaii",
+            "NE": "Nebraska"
         }
         df['state'] = df['state'].map(state_mapping)
 

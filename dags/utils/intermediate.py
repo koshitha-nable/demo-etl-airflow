@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import re
 import psycopg2
 from sqlalchemy import create_engine
 import requests,os
@@ -45,31 +46,39 @@ def load_user_data_to_inter():
         query = "SELECT * FROM stg_users;"
         cursor.execute(query)
         result = cursor.fetchall()
+        print(result)
 
         # work with the data using pandas DataFrame
-        df = pd.DataFrame(result, columns=["user_id", "name", "email","address"])
+        df = pd.DataFrame(result, columns=["address", "email", "name","user_id"])
+        #print(df)
         
         #Remove dublicates
         df = df.drop_duplicates()
 
         # Remove rows with missing values
         df = df.dropna()
+        print(df["user_id"])
+        print(df["name"])
+        print(df["address"])
+        print(df["email"])
 
         # Validate and clean email addresses
+        # df = df[df['email'].apply(lambda x: isinstance(x, str) and re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', x))]
         df = df[df['email'].str.contains(r'^[\w\.-]+@[\w\.-]+\.\w+$')]
-
         # Remove leading/trailing whitespaces from text columns
-        df['name'] = df['name'].str.strip()
+        df['name'] = df['name'].astype(str).str.strip()
+        print(df)
         #df['address'] = df['address'].str.strip()
-
         # Clean and transform the 'address' column
-        df['address'] = df['address'].str.replace('\n', ' ')  # Remove newline characters
-        address_parts = df['address'].str.extract(r'(.+),\s+([A-Za-z\s]+)\s+(\d+)')  # Extract city, state, and ZIP code
+        df['address'] = df['address'].astype(str).str.replace('\n', ' ')  # Remove newline characters
+        address_parts = df['address'].astype(str).str.extract(r'(.+),\s+([A-Za-z\s]+)\s+(\d+)')  # Extract city, state, and ZIP code
         df['location'] = address_parts[0]
         df['state'] = address_parts[1]
         df['zip_code'] = address_parts[2]
         df.drop(['address'], axis=1, inplace=True)
         logger.info("Transformed user data...")
+        print(df)
+        
 
         #return df
         df.to_sql("int_users", con, index=False, if_exists='replace')
@@ -95,20 +104,20 @@ def load_product_data_to_inter():
         query = "SELECT * FROM stg_products;"
         cursor.execute(query)
         result = cursor.fetchall()
+        print(result)
 
         # work with the data using pandas DataFrame
-        df = pd.DataFrame(result, columns=["product_id", "product_name", "product_description","price"])
+        df = pd.DataFrame(result, columns=["price", "product_description", "product_id","product_name"])
 
         # Data cleaning and transformation
         # Remove duplicate rows
         df = df.drop_duplicates()
-
         # Remove rows with missing values
         df = df.dropna()
-
+        
         # Clean product descriptions (remove special characters, HTML tags, etc.)
-        df['product_description'] = df['product_description'].str.replace('[^\w\s]', '').str.strip()
-
+        df['product_description'] = df['product_description'].astype(str).str.replace('[^\w\s]', '', regex=True).str.strip()
+        print(df["product_description"])
         # Convert price to numeric format
         df['price'] = pd.to_numeric(df['price'], errors='coerce')
 
@@ -116,13 +125,13 @@ def load_product_data_to_inter():
         df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
         logger.info("Transformed product data...")
 
-        #con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
+        con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='replace')
         logger.info("Loading product data to intermediate table...")
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading product data to inter table...")
+        #logger.error("Error while loading product data to inter table...")
 
     finally:
         if cursor:
@@ -197,7 +206,9 @@ def load_review_data_to_inter():
         df['review_score'] = df['review_score'].astype(int)
 
         # Convert review_date to datetime
-        df['review_date'] = pd.to_datetime(df['review_date'], format='%Y-%m-%d')
+        # Convert review_date to datetime
+        df['review_date'] = pd.to_datetime(df['review_date'], format='%m/%d/%Y %H:%M')
+
 
         # Data transformation
         # Calculate the year and month of the review_date

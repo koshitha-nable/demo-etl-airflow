@@ -98,8 +98,9 @@ def create_postgres_connection():
             host="remote_db",
             database=Variable.get("DB_NAME")
         )
-
+        logger.info(" connecting to PostgreSQL")
         return connection
+        
         
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
