@@ -7,6 +7,9 @@ from airflow.models import Variable
 from sqlalchemy import create_engine
 from sqlalchemy.sql.type_api import Variant
 from utils.common import *
+from pandas import to_datetime
+
+
 
 file_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
@@ -25,7 +28,7 @@ logger = logging.getLogger("custom_logger_dim")
 logger.setLevel(logging.DEBUG)
 
 # Define the full path to the log file in the desired directory
-log_file_path = os.path.join(log_directory, "dim_log.log")
+log_file_path = os.path.join(log_directory, "combined_log.log")
 
 # Create a FileHandler to write logs to the specified file path
 file_handler = logging.FileHandler(log_file_path)
@@ -225,6 +228,8 @@ def load_dim_user():
             "NE": "Nebraska"
         }
         df['state'] = df['state'].map(state_mapping)
+        # Replace null 'state' values with 'unknown'
+        df['state'].fillna('unknown', inplace=True)
 
         df.to_sql("dim_user",con, index=False, if_exists='replace')
         logger.info("Loading user data to dim table...")

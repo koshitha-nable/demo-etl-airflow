@@ -26,7 +26,8 @@ logger = logging.getLogger("custom_logger_int")
 logger.setLevel(logging.DEBUG)
 
 # Define the full path to the log file in the desired directory
-log_file_path = os.path.join(log_directory, "intermediate_log.log")
+#log_file_path = os.path.join(log_directory, "intermediate_log.log")
+log_file_path = os.path.join(log_directory, "combined_log.log")
 
 # Create a FileHandler to write logs to the specified file path
 file_handler = logging.FileHandler(log_file_path)
@@ -124,6 +125,7 @@ def load_product_data_to_inter():
         # Add a new column for discounted price
         df['discounted_price'] = df['price'] * 0.9  # Applying a 10% discount
         logger.info("Transformed product data...")
+        print(df)
 
         con = create_engine(f'postgresql://{Variable.get("POSTGRES_USER")}:{Variable.get("POSTGRES_PASSWORD")}@remote_db:{Variable.get("DB_PORT")}/{Variable.get("DB_NAME")}')
         df.to_sql("int_products", con, index=False, if_exists='replace')
@@ -169,7 +171,8 @@ def load_transaction_data_to_inter():
         df.drop(['discounted_price'], axis=1, inplace=True)
         df.drop(['price'], axis=1, inplace=True)
         logger.info("Transformed transaction data...")
-        
+        print(df)
+
         df.to_sql("int_transactions", con, index=False, if_exists='replace')
         logger.info("Loading transaction data to intermediate table...")
 
@@ -201,7 +204,7 @@ def load_review_data_to_inter():
 
         # Remove rows with missing values
         df = df.dropna()
-
+        print(df)
         # Convert review_score to integer
         df['review_score'] = df['review_score'].astype(int)
 
@@ -215,9 +218,9 @@ def load_review_data_to_inter():
         df['review_year'] = df['review_date'].dt.year
         df['review_month'] = df['review_date'].dt.month
         logger.info("Transformed review data...")
-
+        print(df)
         #print(df.columns)
-        df.to_sql("int_reviews", con, index=False, if_exists='append')
+        df.to_sql("int_reviews", con, index=False, if_exists='replace')
         logger.info("Loading review data to intermediate table...")
 
 

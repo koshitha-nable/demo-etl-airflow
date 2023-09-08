@@ -26,7 +26,8 @@ logger = logging.getLogger("custom_logger_stg")
 logger.setLevel(logging.DEBUG)
 
 # Define the full path to the log file in the desired directory
-log_file_path = os.path.join(log_directory, "staging_log.log")
+#log_file_path = os.path.join(log_directory, "staging_log.log")
+log_file_path = os.path.join(log_directory, "combined_log.log")
 
 # Create a FileHandler to write logs to the specified file path
 file_handler = logging.FileHandler(log_file_path)
