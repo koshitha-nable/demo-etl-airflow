@@ -1,5 +1,6 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch,MagicMock
+from unittest.mock import Mock, patch
 import logging
 import os
 import pandas as pd
@@ -25,96 +26,163 @@ from dags.utils.dimension import (
 
 class TestDimModule(unittest.TestCase):
 
+    def setUp(self):
+        # Create a DataFrame with no null values for testing
+        self.valid_df_fact = pd.DataFrame({'column1': [1, 2, 3], 'column2': ['A', 'B', 'C']})
+        self.valid_df_product = pd.DataFrame({'product_id': [1, 2, 3], 'product_name': ['A', 'B', 'C']})
+        self.valid_df_user = pd.DataFrame({'user_id': [1, 2, 3], 'name': ['Alice', 'Bob', 'Charlie'], 'email': ['alice@example.com', 'bob@example.com', 'charlie@example.com']})
+        self.valid_df_review = pd.DataFrame({'review_id': [1, 2, 3], 'product_id': [1, 2, 3], 'review_score': [4, 5, 4], 'review_date': ['2023-01-01', '2023-01-02', '2023-01-03']})
+        self.sample_data_fact = pd.DataFrame({
+            'purchase_id': [1, 2, 3],
+            'product_id': [101, 102, 103],
+            'user_id': [201, 202, 203],
+            'quantity': [5, 3, 4],
+            'total_amount': [100.0, 75.0, 120.0]
+        })
 
-    def test_validate_fact_no_null_values(self):
-        # Create a test DataFrame with no null values
-        test_df = pd.DataFrame({'col1': [1, 2, 3], 'col2': ['A', 'B', 'C']})
+        self.sample_data_product = pd.DataFrame({
+            'product_id': [101, 102, 103],
+            'product_name': ['Product A', 'Product B', 'Product C'],
+            'price': [10.0, 15.0, 20.0],
+            'discounted_price': [8.0, 12.0, 18.0],
+            'product_description': ['Description A', None, 'Description C']
+        })
 
-        with patch('pandas.read_sql_table', return_value=test_df):
-            with self.assertLogs(logger, level='INFO') as logs:
+
+        self.sample_data_user = pd.DataFrame({
+            'user_id': [201, 202, 203],
+            'name': ['User A', 'User B', 'User C'],
+            'email': ['usera@example.com', 'userb@example.com', 'userc@example.com'],
+            'zip_code': ['12345', '67890', '54321'],
+            'state': ['FL', 'CA', None]
+        })
+
+        self.sample_data_review = pd.DataFrame({
+            'review_id': [301, 302, 303],
+            'product_id': [101, 102, 103],
+            'review_score': [4, 5, 3],
+            'review_date': ['2023-01-01', '2023-02-01', '2023-03-01']
+        })
+
+
+    def test_load_fact_transaction_success(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.sample_data_fact):
+                with unittest.mock.patch('pandas.DataFrame.to_sql'):
+                    # Call the load_fact_transaction function
+                    load_fact_transaction()
+
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Loading transaction data to fact table...")
+
+
+    def test_load_dim_product_success(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.sample_data_product):
+                with unittest.mock.patch('pandas.DataFrame.to_sql'):
+                    # Call the load_dim_product function
+                    load_dim_product()
+
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Loading product data to dim table...")
+
+
+    def test_load_dim_user_success(self):
+            # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.sample_data_user):
+                with unittest.mock.patch('pandas.DataFrame.to_sql'):
+                    # Call the load_dim_user function
+                    load_dim_user()
+
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Loading user data to dim table...")
+
+
+    def test_load_dim_review_success(self):
+            # Mock the logger
+            test_logger = unittest.mock.Mock()
+            with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+                with unittest.mock.patch('pandas.read_sql_table', return_value=self.sample_data_review):
+                    with unittest.mock.patch('pandas.DataFrame.to_sql'):
+                        # Call the load_dim_review function
+                        load_dim_review()
+
+            # Check that the logger info message is correct
+            test_logger.info.assert_called_once_with("Loading review data to dim table...")
+    
+    
+    def test_valid_fact_table(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.valid_df_fact):
+                # Call the validate_fact function
                 validate_fact()
 
-        # Ensure the log message indicates successful validation
-        self.assertIn("fact table is validated", logs.output)
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("fact table is validated")
 
-    def test_validate_fact_with_null_values(self):
-        # Create a test DataFrame with null values
-        test_df = pd.DataFrame({'col1': [1, 2, None], 'col2': ['A', None, 'C']})
 
-        with patch('pandas.read_sql_table', return_value=test_df):
-            with self.assertLogs(logger, level='ERROR') as logs:
+    def test_invalid_fact_table(self):
+        # Create a DataFrame with null values for testing
+        invalid_df = pd.DataFrame({'column1': [1, 2, None], 'column2': ['A', None, 'C']})
+
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=invalid_df):
+                # Use assertRaises to check if the function raises an exception
                 with self.assertRaises(Exception) as context:
                     validate_fact()
 
-        # Ensure the log message indicates the presence of null values and an exception is raised
-        self.assertIn("Error.. Null Values Found", logs.output)
-        self.assertIsNotNone(context.exception)
+        # Check that the logger error message is correct
+        test_logger.error.assert_called_once_with("Error.. Null Values Found")
+        # Check that the exception message is correct
+        self.assertEqual(str(context.exception), "Null values found in the fact table!")
 
-    def test_validate_dim_product_valid_data(self):
-        # Create a test DataFrame with valid data (no nulls or duplicates)
-        test_df = pd.DataFrame({'product_id': [1, 2, 3], 'price': [10.0, 20.0, 30.0]})
 
-        with patch('pandas.read_sql_table', return_value=test_df):
-            with self.assertLogs(logger, level='INFO') as logs:
+    def test_valid_dim_product_table(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.valid_df_product):
+                # Call the validate_dim_product function
                 validate_dim_product()
 
-        # Ensure the log message indicates successful validation
-        self.assertIn("Dimension table 'dim_product' validated successfully.", logs.output)
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Dimension table 'dim_product' validated successfully.")
 
-    def test_validate_dim_product_with_null_values(self):
-        # Create a test DataFrame with null values
-        test_df = pd.DataFrame({'product_id': [1, 2, None], 'price': [10.0, None, 30.0]})
 
-        with patch('pandas.read_sql_table', return_value=test_df):
-            with self.assertLogs(logger, level='ERROR') as logs:
-                with self.assertRaises(Exception) as context:
-                    validate_dim_product()
+    def test_valid_dim_user_table(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.valid_df_user):
+                # Call the validate_dim_user function
+                validate_dim_user()
 
-        # Ensure the log message indicates the presence of null values and an exception is raised
-        self.assertIn("Null values found in the dimension table!", logs.output)
-        self.assertIsNotNone(context.exception)
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Dimension table 'dim_user' validated successfully.")
 
-    # Add similar test methods for validate_dim_user and validate_dim_review
-    @patch('dags.utils.dimension.pd.read_sql_table')  # Mock the read_sql_table function
-    def test_validate_fact_no_null_values(self, mock_read_sql_table):
-        # Create a mock DataFrame without null values
-        mock_df = pd.DataFrame({
-            'column1': [1, 2, 3],
-            'column2': ['A', 'B', 'C']
-        })
 
-        # Set up the behavior of the mocked read_sql_table function
-        mock_read_sql_table.return_value = mock_df
+    def test_valid_dim_review_table(self):
+        # Mock the logger
+        test_logger = unittest.mock.Mock()
+        with unittest.mock.patch('dags.utils.dimension.logger', test_logger):
+            with unittest.mock.patch('pandas.read_sql_table', return_value=self.valid_df_review):
+                # Call the validate_dim_review function
+                validate_dim_review()
 
-        # Capture log output
-        with self.assertLogs(level='INFO') as logs:
-            validate_fact()
+        # Check that the logger info message is correct
+        test_logger.info.assert_called_once_with("Dimension table 'dim_review' validated successfully.")
 
-        # Assertions
-        self.assertTrue(mock_read_sql_table.called)
-        self.assertNotIn("Error.. Null Values Found", logs.output)
-        self.assertIn("fact table is validated", logs.output)
-
-    @patch('dags.utils.dimension.pd.read_sql_table')  # Mock the read_sql_table function
-    def test_validate_fact_with_null_values(self, mock_read_sql_table):
-        # Create a mock DataFrame with null values
-        mock_df = pd.DataFrame({
-            'column1': [1, None, 3],
-            'column2': ['A', 'B', None]
-        })
-
-        # Set up the behavior of the mocked read_sql_table function
-        mock_read_sql_table.return_value = mock_df
-
-        # Capture log output
-        with self.assertLogs(level='ERROR') as logs:
-            with self.assertRaises(Exception):
-                validate_fact()
-
-        # Assertions
-        self.assertTrue(mock_read_sql_table.called)
-        self.assertIn("Error.. Null Values Found", logs.output)
-        self.assertNotIn("fact table is validated", logs.output)
-
+    
+        
 if __name__ == '__main__':
     unittest.main()
