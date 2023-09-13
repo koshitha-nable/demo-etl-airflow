@@ -39,15 +39,26 @@ file_handler.setFormatter(formatter)
 # Add the file handler to the logger
 logger.addHandler(file_handler)
 
+
 def validate_fact():
-    # Load fact table data into a DataFrame
-    df = pd.read_sql_table("fact_transaction",con) 
-    # Check for null values in the DataFrame
-    # Raise an exception if null values are found
-    if df.isnull().values.any():
-        logger.error("Error.. Null Values Found")
-        raise Exception("Null values found in the fact table!")
-    logger.info("fact table is validated")
+
+    try:
+        # Load fact table data into a DataFrame
+        df = pd.read_sql_table("fact_transaction",con) 
+        # Check for null values in the DataFrame
+        # Raise an exception if null values are found
+        if df.isnull().values.any():
+            logger.error("Error.. Null Values Found")
+            raise Exception("Null values found in the fact table!")
+        logger.info("fact table is validated")
+
+        return True
+
+    except Exception as error:
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return False
+
 
 def validate_dim_product():
     try:
@@ -68,9 +79,13 @@ def validate_dim_product():
             raise Exception(error_message)
         
         logger.info("Dimension table 'dim_product' validated successfully.")
+        return True
     
-    except Exception as e:
-        logger.error("An error occurred during validation: %s", str(e))
+    except Exception as error:
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return False
+
 
 def validate_dim_user():
     try:
@@ -91,10 +106,12 @@ def validate_dim_user():
             raise Exception(error_message)
         
         logger.info("Dimension table 'dim_user' validated successfully.")
+        return True
     
-    except Exception as e:
-        logger.error("An error occurred during validation: %s", str(e))
-
+    except Exception as error:
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return False
 
 def validate_dim_review():
     try:
@@ -115,15 +132,16 @@ def validate_dim_review():
             raise Exception(error_message)
         
         logger.info("Dimension table 'dim_review' validated successfully.")
+        return True
     
-    except Exception as e:
-        logger.error("An error occurred during validation: %s", str(e))
-
+    except Exception as error:
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return False
 
 
 def load_fact_transaction():
     try:
-
         df = pd.read_sql_table("int_transactions",con) 
         #cleaning data
         df = df.dropna()
@@ -139,16 +157,17 @@ def load_fact_transaction():
 
         df.to_sql("fact_transaction",con, index=False, if_exists='replace')
         logger.info("Loading transaction data to fact table...")
-        
 
+        return df
+        
     except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading transaction data to dim table...")
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return None
 
 
 def load_dim_product():
     try:
-
         df = pd.read_sql_table("int_products",con) 
         # Drop duplicates based on 'user_id'
         df.drop_duplicates(subset=['product_id'], keep='first', inplace=True)
@@ -162,14 +181,16 @@ def load_dim_product():
         df.to_sql("dim_product",con, index=False, if_exists='replace')
         logger.info("Loading product data to dim table...")
 
+        return df
+
     except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading product data to dim table...")
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return None
 
 
 def load_dim_user():
     try:
-
         df = pd.read_sql_table("int_users",con) 
         df.drop_duplicates(subset=['user_id'], keep='first', inplace=True)
         df = df.dropna()
@@ -234,14 +255,16 @@ def load_dim_user():
         df.to_sql("dim_user",con, index=False, if_exists='replace')
         logger.info("Loading user data to dim table...")
 
+        return df
+
     except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading user data to dim table...")
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return None
 
 
 def load_dim_review():
     try:
-
         df = pd.read_sql_table("int_reviews",con) 
         df.drop_duplicates(subset=['review_id'], keep='first', inplace=True)
         df = df.dropna(subset=['review_id'])
@@ -252,9 +275,13 @@ def load_dim_review():
         df.to_sql("dim_review",con, index=False, if_exists='replace')
         logger.info("Loading review data to dim table...")
 
+        return df
+
     except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading review data to dim table...")
+        logger.error(f"Validation Error: {error}")
+        # Return False to indicate validation failure
+        return None
+
 
 
         

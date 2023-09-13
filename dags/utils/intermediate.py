@@ -84,11 +84,14 @@ def load_user_data_to_inter():
         #return df
         df.to_sql("int_users", con, index=False, if_exists='replace')
         logger.info("Loading user data to intermediate table...")
+
+        return df
         
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         logger.error("Error while loading user data to inter table...")
+        return None
 
     finally:
         if cursor:
@@ -131,9 +134,13 @@ def load_product_data_to_inter():
         df.to_sql("int_products", con, index=False, if_exists='replace')
         logger.info("Loading product data to intermediate table...")
 
+        return df
+
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         #logger.error("Error while loading product data to inter table...")
+        
+        return None
 
     finally:
         if cursor:
@@ -176,9 +183,12 @@ def load_transaction_data_to_inter():
         df.to_sql("int_transactions", con, index=False, if_exists='replace')
         logger.info("Loading transaction data to intermediate table...")
 
+        return df
+
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         logger.error("Error while loading transaction data to inter table...")
+        return None
 
     finally:
         if cursor:
@@ -223,10 +233,14 @@ def load_review_data_to_inter():
         df.to_sql("int_reviews", con, index=False, if_exists='replace')
         logger.info("Loading review data to intermediate table...")
 
+        return df
+
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         logger.error("Error while loading review data to inter table...")
+
+        return None
 
     finally:
         if cursor:

@@ -51,9 +51,6 @@ def handle_failure(context):
     failed_task = context.get('task_instance')
     failed_task_id = failed_task.task_id
 
-    # Perform actions or create additional tasks specific to handling failure scenarios
-    # For example, you can send a notification, trigger a recovery process, or perform cleanup tasks.
-
     # Send a notification
     send_notification(failed_task_id)
         
@@ -86,9 +83,11 @@ def send_notification(failed_task_id):
             server.send_message(message)
         print('Email notification sent successfully!')
         logger.info("Email notification sent successfully!")
+        return True
     except Exception as e:
         print(f'Failed to send email notification. Error: {str(e)}')
         logger.error("Failed to send email notification")
+        return False
 
 
 def create_postgres_connection():
@@ -116,6 +115,9 @@ def close_postgres_connection(connection):
         if connection:
             connection.close()
             print("PostgreSQL connection is closed")
+            return True
+        
     except Exception as error:
         print("Error while closing PostgreSQL connection:", error)
         logger.error("Error while closing PostgreSQL connection")
+        return False
