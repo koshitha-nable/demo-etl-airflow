@@ -45,12 +45,12 @@ def load_data_to_db(api_endpoint, staging_table_name):
         data = pull_api_data(api_endpoint)
         data.to_sql(staging_table_name, con, index=False, if_exists='replace')
         logger.info(f"Loading {api_endpoint} data to {staging_table_name} table...")
-        return True
+        return data
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         logger.error(f"Error while loading {api_endpoint} data to {staging_table_name} table...")
-        return False
+        return None
 
     finally:
         if cursor:
@@ -66,7 +66,8 @@ def load_review_to_db():
         review_data = get_reviews()
         review_data.to_sql("stg_reviews", con, index=False, if_exists='replace')
         logger.info("Loading review data to staging table...")
-        return True
+        return review_data
+
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -83,14 +84,16 @@ def get_reviews():
 
     try: 
         
-        file_path = os.path.join(file_root,'src_data/reviews.csv')
+        file_path = os.path.join(file_root, 'src_data', 'reviews.csv')
+        #print(file_path)
 
-        if not file_path.exists():
+        if not os.path.exists(file_path):
             logger.error(f"Reviews file not found at {file_path}")
             return None
         
         reviews_data = pd.read_csv(file_path)
         logger.info("Retrieved review data")
+        #print(reviews_data)
         return reviews_data
     
     except Exception as error:
