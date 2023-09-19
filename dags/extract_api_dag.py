@@ -118,17 +118,21 @@ with DAG(
         
         task_load_src_user = PythonOperator(
             task_id="load_user_to_stg",
-            python_callable=load_user_data_to_db
+            python_callable=load_data_to_db,
+            op_args=['users', 'stg_users']  # API endpoint and staging table name
+            
         )
 
         task_load_src_product = PythonOperator(
             task_id="load_product_to_stg",
-            python_callable=load_product_data_to_db
+            python_callable=load_data_to_db,
+            op_args=['products', 'stg_products']
         )
 
         task_load_src_transactions = PythonOperator(
             task_id="load_transaction_to_stg",
-            python_callable=load_transaction_data_to_db
+            python_callable=load_data_to_db,
+            op_args=['transactions', 'stg_transactions']
         )
 
     task_load_src_review = PythonOperator(

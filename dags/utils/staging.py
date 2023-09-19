@@ -26,7 +26,8 @@ logger = logging.getLogger("custom_logger_stg")
 logger.setLevel(logging.DEBUG)
 
 # Define the full path to the log file in the desired directory
-log_file_path = os.path.join(log_directory, "staging_log.log")
+#log_file_path = os.path.join(log_directory, "staging_log.log")
+log_file_path = os.path.join(log_directory, "combined_log.log")
 
 # Create a FileHandler to write logs to the specified file path
 file_handler = logging.FileHandler(log_file_path)
@@ -37,56 +38,19 @@ file_handler.setFormatter(formatter)
 # Add the file handler to the logger
 logger.addHandler(file_handler)
 
-def load_user_data_to_db():
+def load_data_to_db(api_endpoint, staging_table_name):
     try:
-
         connection = create_postgres_connection()
         cursor = connection.cursor()
-        user_data = pull_user_data()
-        user_data.to_sql("stg_users", con, index=False, if_exists='replace')
-        logger.info("Loading user data to staging table...")
+        data = pull_api_data(api_endpoint)
+        data.to_sql(staging_table_name, con, index=False, if_exists='replace')
+        logger.info(f"Loading {api_endpoint} data to {staging_table_name} table...")
+        return data
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading user data to stg table...")
-
-    finally:
-        if cursor:
-            cursor.close()
-        close_postgres_connection(connection)
-
-
-def load_product_data_to_db():
-    try:
-        
-        connection = create_postgres_connection()
-        cursor = connection.cursor()
-        product_data = pull_product_data()
-        product_data.to_sql("stg_products", con, index=False, if_exists='replace')
-        logger.info("Loading product data to staging table...")
-
-    except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading product data to stg table...")
-
-    finally:
-        if cursor:
-            cursor.close()
-        close_postgres_connection(connection)
-
-
-def load_transaction_data_to_db():
-    try:
-        
-        connection = create_postgres_connection()
-        cursor = connection.cursor()
-        transaction_data = pull_transaction_data()
-        transaction_data.to_sql("stg_transactions", con, index=False, if_exists='replace')
-        logger.info("Loading transaction data to staging table...")
-
-    except Exception as error:
-        print("Error while connecting to PostgreSQL:", error)
-        logger.error("Error while loading transaction data to stg table...")
+        logger.error(f"Error while loading {api_endpoint} data to {staging_table_name} table...")
+        return None
 
     finally:
         if cursor:
@@ -102,10 +66,13 @@ def load_review_to_db():
         review_data = get_reviews()
         review_data.to_sql("stg_reviews", con, index=False, if_exists='replace')
         logger.info("Loading review data to staging table...")
+        return review_data
+
 
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
         logger.error("Error while loading review data to stg table...")
+        return False
 
     finally:
         if cursor:
@@ -113,29 +80,33 @@ def load_review_to_db():
         close_postgres_connection(connection)
 
 
-
 def get_reviews():
-    transaction_data = pd.read_csv(os.path.join(file_root,'src_data/reviews.csv'))
-    logger.info("Retrieved review data")
-    return transaction_data
+
+    try: 
+        
+        file_path = os.path.join(file_root, 'src_data', 'reviews.csv')
+        #print(file_path)
+
+        if not os.path.exists(file_path):
+            logger.error(f"Reviews file not found at {file_path}")
+            return None
+        
+        reviews_data = pd.read_csv(file_path)
+        logger.info("Retrieved review data")
+        #print(reviews_data)
+        return reviews_data
+    
+    except Exception as error:
+        logger.error(f"Error while reading review data: {error}")
+        return None
     
 
-def pull_user_data(): 
-    user_data = requests.get('http://mock-api:5000/users')
-    user_data = pd.DataFrame(user_data.json())
-    logger.info("Retrieved user data")
-    return user_data
-    
-
-def pull_product_data(): 
-    product_data = requests.get('http://mock-api:5000/products')
-    product_data = pd.DataFrame(product_data.json())
-    logger.info("Retrieved product data")
-    return product_data
-
-
-def pull_transaction_data(): 
-    transaction_data = requests.get('http://mock-api:5000/transactions')
-    transaction_data = pd.DataFrame(transaction_data.json())
-    logger.info("Retrieved transaction data")
-    return transaction_data
+def pull_api_data(api_endpoint):
+    try:
+        data = requests.get(f'http://mock-api:5000/{api_endpoint}')
+        data = pd.DataFrame(data.json())
+        logger.info(f"Retrieved {api_endpoint} data")
+        return data
+    except Exception as error:
+        logger.error(f"Error while retrieving {api_endpoint} data: {error}")
+        return None

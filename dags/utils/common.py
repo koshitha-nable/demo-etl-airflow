@@ -26,7 +26,9 @@ logger = logging.getLogger("custom_logger_cmn")
 logger.setLevel(logging.DEBUG)
 
 # Define the full path to the log file in the desired directory
-log_file_path = os.path.join(log_directory, "custom_log.log")
+#log_file_path = os.path.join(log_directory, "custom_log.log")
+log_file_path = os.path.join(log_directory, "combined_log.log")
+
 
 # Create a FileHandler to write logs to the specified file path
 file_handler = logging.FileHandler(log_file_path)
@@ -48,9 +50,6 @@ def handle_failure(context):
     # This function will be called whenever a task fails in the DAG
     failed_task = context.get('task_instance')
     failed_task_id = failed_task.task_id
-
-    # Perform actions or create additional tasks specific to handling failure scenarios
-    # For example, you can send a notification, trigger a recovery process, or perform cleanup tasks.
 
     # Send a notification
     send_notification(failed_task_id)
@@ -84,9 +83,11 @@ def send_notification(failed_task_id):
             server.send_message(message)
         print('Email notification sent successfully!')
         logger.info("Email notification sent successfully!")
+        return True
     except Exception as e:
         print(f'Failed to send email notification. Error: {str(e)}')
         logger.error("Failed to send email notification")
+        return False
 
 
 def create_postgres_connection():
@@ -98,8 +99,9 @@ def create_postgres_connection():
             host="remote_db",
             database=Variable.get("DB_NAME")
         )
-
+        logger.info(" connecting to PostgreSQL")
         return connection
+        
         
     except Exception as error:
         print("Error while connecting to PostgreSQL:", error)
@@ -113,6 +115,9 @@ def close_postgres_connection(connection):
         if connection:
             connection.close()
             print("PostgreSQL connection is closed")
+            return True
+        
     except Exception as error:
         print("Error while closing PostgreSQL connection:", error)
         logger.error("Error while closing PostgreSQL connection")
+        return False
